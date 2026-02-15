@@ -7,7 +7,8 @@
 
 ## 📜 A Lenda (Contexto do Projeto)
 
-Estamos em 2026. Após o incidente no Pico Paraná, onde a operadora (codinome: *T.H.A.Y.A.N.E.*) utilizou um algoritmo guloso (*Greedy Search*) focado apenas na velocidade devido ao Life Style, o ativo **R.O.B.E.R.T.O.** (Robô Operacional de Busca e Resgate em Terreno Ostensivo) foi dado como perdido por 5 dias em terreno hostil.
+Estamos em 2026. Após o incidente no Pico Paraná, onde a operadora (codinome: *T.H.A.Y.A.N.E.*) utilizou um algoritmo guloso (*Greedy Search*) focado apenas na velocidade devido ao Life Style. 
+O ativo **R.O.B.E.R.T.O.** (Robô Operacional de Busca e Resgate em Terreno Ostensivo) foi dado como perdido por 5 dias em terreno hostil.
 
 A falha foi identificada: o robô não possuía memória de estado, resultando em loops infinitos e tomadas de decisão baseadas apenas no "agora".
 
