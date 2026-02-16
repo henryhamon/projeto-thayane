@@ -294,8 +294,17 @@
             </div>
             <div id="editor"></div>
             <div id="controls-bar">
-                <button id="btn-run">Executar Protocolo</button>
-                <button id="btn-reset">Reiniciar</button>
+                <div class="primary-controls">
+                    <button id="btn-run" class="cmd-btn run">Executar Protocolo</button>
+                    <button id="btn-reset" class="cmd-btn">Reiniciar Posição</button>
+                </div>
+
+                <div class="secondary-controls">
+                    <button id="btn-new-map" class="cmd-btn action" title="Gerar um novo labirinto aleatório">🔄 Novo
+                        Mapa</button>
+                    <button id="btn-download" class="cmd-btn action" title="Baixar código Python">💾 Download
+                        .PY</button>
+                </div>
             </div>
         </div>
     </div>

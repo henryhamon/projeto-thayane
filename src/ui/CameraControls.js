@@ -29,10 +29,10 @@ export class CameraControls {
       }
     };
 
-    bind('btn-pan-n', () => this.pan(0, -1));
-    bind('btn-pan-s', () => this.pan(0, 1));
-    bind('btn-pan-w', () => this.pan(-1, 0));
-    bind('btn-pan-e', () => this.pan(1, 0));
+    bind('btn-pan-n', () => this.pan(0, 1));
+    bind('btn-pan-s', () => this.pan(0, -1));
+    bind('btn-pan-w', () => this.pan(1, 0));
+    bind('btn-pan-e', () => this.pan(-1, 0));
 
     bind('btn-zoom-in', () => this.zoom(1));
     bind('btn-zoom-out', () => this.zoom(-1));

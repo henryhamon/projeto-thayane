@@ -10,7 +10,7 @@ export function setupScene() {
 
   // Isometric Camera Setup
   const aspect = window.innerWidth / window.innerHeight;
-  const d = 15; // View size
+  const d = 9; // View size
   const camera = new THREE.OrthographicCamera(
     -d * aspect, d * aspect, d, -d, 1, 1000
   );

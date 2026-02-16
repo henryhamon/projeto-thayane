@@ -8,7 +8,6 @@ import 'codemirror/mode/python/python';
 import 'codemirror/theme/dracula.css';
 import 'codemirror/theme/elegant.css';
 import { setupScene } from './pico-parana/SceneSetup.js';
-// IMPORT ATUALIZADO: Trocamos TRILHA_DO_PICO por MazeGenerator
 import { MazeGenerator, TILE_TYPES } from './pico-parana/MapData.js';
 import { MazeRenderer } from './pico-parana/MazeRenderer.js';
 import { Rover } from './roberto/Rover.js';
@@ -18,16 +17,12 @@ import { CameraControls } from './ui/CameraControls.js';
 const { scene, camera, renderer } = setupScene();
 document.getElementById('game-container').appendChild(renderer.domElement);
 
-// Add Atmospheric Fog
 const fogColor = 0x2f4f4f;
-scene.fog = new THREE.Fog(fogColor, 20, 100); // Neblina reduzida
+scene.fog = new THREE.Fog(fogColor, 20, 100);
 scene.background = new THREE.Color(fogColor);
 
-// Global Variables
-let rover;
-let mazeRenderer;
+let rover, mazeRenderer;
 let startX = 0, startZ = 0;
-// VARIÁVEL GLOBAL DO MAPA (para usar no reset se quiser manter o mesmo mapa)
 let currentMapData = [];
 const clock = new THREE.Clock();
 
@@ -39,20 +34,22 @@ const clock = new THREE.Clock();
     statusEl.innerText = "STATUS: CARREGANDO ASSETS...";
     await assetManager.loadAll();
 
-    // 2. Generate Maze (Dynamic)
     statusEl.innerText = "STATUS: GERANDO TERRENO...";
     mazeRenderer = new MazeRenderer();
 
-    // GERAÇÃO PROCEDURAL AQUI: (21x21 garante estrutura correta)
-    currentMapData = MazeGenerator.generate(21, 21);
+    // Generate Map (Odd dimensions)
+    currentMapData = MazeGenerator.generate(15, 15);
 
     const { offsetX, offsetZ } = await mazeRenderer.render(scene, currentMapData);
 
-    // 3. Setup Rover
     rover = new Rover();
     rover.addToScene(scene);
 
-    // Find Start Position
+    // Set Rover Dependencies
+    rover.currentMapData = currentMapData;
+    rover.mazeRenderer = mazeRenderer;
+
+    // Find Start
     currentMapData.forEach((row, z) => {
       row.forEach((type, x) => {
         if (type === TILE_TYPES.CUME) {
@@ -64,12 +61,10 @@ const clock = new THREE.Clock();
 
     rover.setPosition(startX, startZ);
     rover.setRotation('N');
-    rover.currentMapData = currentMapData; // Pass Map Context for Collision
 
-    // 4. Initialize Camera Controls
     initCameraControls(camera, rover);
 
-    statusEl.innerText = "STATUS: INICIALIZANDO PYTHON RUNTIME...";
+    statusEl.innerText = "STATUS: INICIALIZANDO PYTHON...";
     await pyLoader.init();
 
     statusEl.innerText = "STATUS: SISTEMA ONLINE (PYTHON 3.11)";
@@ -81,7 +76,6 @@ const clock = new THREE.Clock();
   }
 })();
 
-// --- Helper: Camera Controls Init ---
 function initCameraControls(camera, target) {
   try {
     const controls = new CameraControls(camera, target);
@@ -109,43 +103,33 @@ def main():
 main()
 `,
   mode: "python",
-  theme: "dracula", // Default theme
+  theme: "dracula",
   lineNumbers: true,
   indentUnit: 4,
   extraKeys: {
     "Tab": function (cm) {
-      if (cm.somethingSelected()) {
-        cm.indentSelection("add");
-      } else {
-        cm.replaceSelection("    ", "end"); // Soft tabs
-      }
+      if (cm.somethingSelected()) cm.indentSelection("add");
+      else cm.replaceSelection("    ", "end");
     }
   }
 });
 
-// Fullscreen Toggle
-// Fullscreen Toggle
+// Fullscreen & Theme Toggles
 const terminalHeader = document.getElementById('terminal-header');
 const container = document.getElementById('interface-container');
+const btnTheme = document.getElementById('btn-theme-toggle');
 
 if (terminalHeader && container) {
-  // Toggle Fullscreen (click on header background, excluding buttons)
   terminalHeader.addEventListener('click', (e) => {
-    // Avoid toggling if clicking the theme button
     if (e.target.closest('#btn-theme-toggle')) return;
-
     container.classList.toggle('terminal-fullscreen');
-    if (typeof editor !== 'undefined') {
-      setTimeout(() => editor.refresh(), 50);
-    }
+    if (typeof editor !== 'undefined') setTimeout(() => editor.refresh(), 50);
   });
 }
 
-// Theme Toggle
-const btnTheme = document.getElementById('btn-theme-toggle');
 if (btnTheme) {
   btnTheme.addEventListener('click', (e) => {
-    e.stopPropagation(); // Stop fullscreen toggle
+    e.stopPropagation();
     const current = editor.getOption('theme');
     const next = current === 'dracula' ? 'elegant' : 'dracula';
     editor.setOption('theme', next);
@@ -153,7 +137,6 @@ if (btnTheme) {
   });
 }
 
-// --- Animation Loop ---
 function animate() {
   requestAnimationFrame(animate);
   if (!rover) return;
@@ -168,7 +151,6 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// --- UI Logic ---
 document.getElementById('btn-run').addEventListener('click', async () => {
   if (!rover) return;
   const code = editor.getValue();
@@ -176,18 +158,14 @@ document.getElementById('btn-run').addEventListener('click', async () => {
   statusEl.innerText = "STATUS: PROCESSANDO...";
 
   try {
-    const logs = await codeRunner.runUserCode(code);
+    const logs = await codeRunner.runUserCode(code, currentMapData);
+    console.log("Planos do Roberto:", logs);
     rover.processLogs(logs);
     statusEl.innerText = "STATUS: EXECUTANDO MOVIMENTOS...";
 
-    // Hook Events
     rover.onWin = () => {
       statusEl.innerText = "STATUS: RESGATE CONCLUIDO!";
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       alert('PARABENS! Roberto chegou a Fazenda!');
     };
 
