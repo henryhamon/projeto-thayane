@@ -7,6 +7,10 @@ export class CameraControls {
     this.maxZoom = 40;
     this.panSpeed = 2;
 
+    // Orbit Logic
+    this.orbitAngle = Math.PI / 4; // Start at 45 degrees
+    this.radius = 20; // Default distance
+
     this.bindEvents();
   }
 
@@ -16,9 +20,7 @@ export class CameraControls {
     const bind = (id, action) => {
       const btn = document.getElementById(id);
       if (btn) {
-        // Remove old listeners to be safe (cloning node is a quick way, or just add logic)
-        // For now, simpler is better. Just addListener.
-        btn.onclick = (e) => { // Use onclick property to override previous bindings easily
+        btn.onclick = (e) => {
           e.stopPropagation();
           action();
         };
@@ -27,27 +29,42 @@ export class CameraControls {
       }
     };
 
-    bind('btn-pan-n', () => this.pan(0, -1)); // Up (North)
-    bind('btn-pan-s', () => this.pan(0, 1));  // Down (South)
-    bind('btn-pan-w', () => this.pan(-1, 0)); // Left (West)
-    bind('btn-pan-e', () => this.pan(1, 0));  // Right (East)
+    bind('btn-pan-n', () => this.pan(0, -1));
+    bind('btn-pan-s', () => this.pan(0, 1));
+    bind('btn-pan-w', () => this.pan(-1, 0));
+    bind('btn-pan-e', () => this.pan(1, 0));
 
     bind('btn-zoom-in', () => this.zoom(1));
     bind('btn-zoom-out', () => this.zoom(-1));
 
     bind('btn-focus', () => this.focusTarget());
+
+    // Rotation bindings
+    bind('btn-rotate-cw', () => this.rotate(1));
+    bind('btn-rotate-ccw', () => this.rotate(-1));
+  }
+
+  rotate(direction) {
+    // 1 = CW, -1 = CCW
+    // Increment 45 degrees (PI/4)
+    const step = Math.PI / 4;
+    this.orbitAngle += direction * step;
+
+    this.focusTarget(); // Re-center with new angle
   }
 
   pan(dx, dz) {
-    // Move both camera and its lookAt target (conceptually)
-    // For now, we just move the camera position, which changes the view relative to the current focus
+    // Ideally pan should be relative to camera view
+    // For now keeping it world-aligned for simplicity as requested, 
+    // or we can rotate the vector by orbitAngle if we want view-relative panning.
+
+    // Simple World-aligned Pan:
     this.camera.position.x += dx * this.panSpeed;
     this.camera.position.z += dz * this.panSpeed;
   }
 
   zoom(delta) {
-    this.camera.zoom += delta * 0.1; // Adjust sensitivity
-    // Clamp zoom
+    this.camera.zoom += delta * 0.1;
     if (this.camera.zoom < 0.5) this.camera.zoom = 0.5;
     if (this.camera.zoom > 2.0) this.camera.zoom = 2.0;
 
@@ -59,19 +76,18 @@ export class CameraControls {
 
     const targetPos = this.rover.mesh.position;
 
-    // Reset camera relative to rover position using isometric offset
-    // Isometric view usually implies an offset like (20, 20, 20)
-    const offset = 20;
-    this.camera.position.set(targetPos.x + offset, offset, targetPos.z + offset);
+    // Calculate offset based on orbitAngle
+    // x = cos(angle) * dist, z = sin(angle) * dist
+    // y is constant offset
+    const height = 20;
+
+    const offsetX = Math.cos(this.orbitAngle) * this.radius;
+    const offsetZ = Math.sin(this.orbitAngle) * this.radius;
+
+    this.camera.position.set(targetPos.x + offsetX, height, targetPos.z + offsetZ);
     this.camera.lookAt(targetPos.x, targetPos.y, targetPos.z);
 
-    // Reset Zoom default
-    this.camera.zoom = 1;
-    this.camera.updateProjectionMatrix();
-  }
-
-  updateProjection() {
-    // Orthographic camera projection update usually handled by zoom property + updateProjectionMatrix
+    // Reset Zoom default if we want, or keep it. Often nice to keep zoom.
     this.camera.updateProjectionMatrix();
   }
 }

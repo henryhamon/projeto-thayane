@@ -43,11 +43,18 @@ class AssetManager {
         (gltf) => {
           const model = gltf.scene;
 
-          // Optimization: Enable shadows on all meshes
+          // Optimization: Enable shadows on all meshes & Apply Transparency (X-Ray)
           model.traverse((child) => {
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
+
+              // Clone material to avoid shared state issues
+              if (child.material) {
+                child.material = child.material.clone();
+                child.material.transparent = true;
+                child.material.opacity = 0.7; // X-Ray Vision
+              }
             }
           });
 

@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import CodeMirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/python/python';
+import 'codemirror/theme/dracula.css';
+import 'codemirror/theme/elegant.css';
 import { setupScene } from './pico-parana/SceneSetup.js';
 // IMPORT ATUALIZADO: Trocamos TRILHA_DO_PICO por MazeGenerator
 import { MazeGenerator, TILE_TYPES } from './pico-parana/MapData.js';
@@ -107,7 +109,7 @@ def main():
 main()
 `,
   mode: "python",
-  theme: "default",
+  theme: "dracula", // Default theme
   lineNumbers: true,
   indentUnit: 4,
   extraKeys: {
@@ -122,16 +124,32 @@ main()
 });
 
 // Fullscreen Toggle
+// Fullscreen Toggle
 const terminalHeader = document.getElementById('terminal-header');
 const container = document.getElementById('interface-container');
 
 if (terminalHeader && container) {
-  terminalHeader.addEventListener('click', () => {
+  // Toggle Fullscreen (click on header background, excluding buttons)
+  terminalHeader.addEventListener('click', (e) => {
+    // Avoid toggling if clicking the theme button
+    if (e.target.closest('#btn-theme-toggle')) return;
+
     container.classList.toggle('terminal-fullscreen');
-    // Refresh CodeMirror if needed (using global editor variable)
     if (typeof editor !== 'undefined') {
       setTimeout(() => editor.refresh(), 50);
     }
+  });
+}
+
+// Theme Toggle
+const btnTheme = document.getElementById('btn-theme-toggle');
+if (btnTheme) {
+  btnTheme.addEventListener('click', (e) => {
+    e.stopPropagation(); // Stop fullscreen toggle
+    const current = editor.getOption('theme');
+    const next = current === 'dracula' ? 'elegant' : 'dracula';
+    editor.setOption('theme', next);
+    btnTheme.innerText = next === 'dracula' ? '🌙' : '☀️';
   });
 }
 

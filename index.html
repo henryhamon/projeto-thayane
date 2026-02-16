@@ -77,6 +77,7 @@
             justify-content: center;
             transition: all 0.2s;
             padding: 0;
+            border-radius: 4px;
         }
 
         #camera-controls button:hover {
@@ -85,7 +86,8 @@
         }
 
         /* D-Pad Placement */
-        #btn-zoom-in {
+        #btn-rotate-ccw {
+            /* Row 1 */
             grid-column: 1;
             grid-row: 1;
             font-size: 20px;
@@ -96,13 +98,15 @@
             grid-row: 1;
         }
 
-        #btn-zoom-out {
+        #btn-rotate-cw {
+            /* Row 1 */
             grid-column: 3;
             grid-row: 1;
             font-size: 20px;
         }
 
         #btn-pan-w {
+            /* Row 2 */
             grid-column: 1;
             grid-row: 2;
         }
@@ -119,11 +123,24 @@
             grid-row: 2;
         }
 
+        #btn-zoom-in {
+            /* Row 3 */
+            grid-column: 1;
+            grid-row: 3;
+            font-size: 20px;
+        }
+
         #btn-pan-s {
             grid-column: 2;
             grid-row: 3;
         }
 
+        #btn-zoom-out {
+            /* Row 3 */
+            grid-column: 3;
+            grid-row: 3;
+            font-size: 20px;
+        }
 
         /* TERMINAL / INTERFACE CONTAINER */
         #interface-container {
@@ -172,6 +189,22 @@
             text-shadow: 0 0 5px #00ff41;
         }
 
+        .icon-btn {
+            background: none;
+            border: 1px solid #004400;
+            color: inherit;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
+        .icon-btn:hover {
+            background: #004400;
+            color: #fff;
+        }
+
         #editor {
             flex-grow: 1;
             font-size: 14px;
@@ -206,20 +239,19 @@
         .CodeMirror {
             height: 100% !important;
             background: transparent !important;
+            /* Default transparent for hacker theme */
             color: #00ff41 !important;
         }
 
-        .CodeMirror-cursor {
-            border-left: 2px solid #00ff41 !important;
+        /* Allow theme overrides */
+        .cm-s-dracula.CodeMirror {
+            background: #282a36 !important;
+            color: #f8f8f2 !important;
         }
 
-        .CodeMirror-gutters {
-            background: transparent !important;
-            border-right: 1px solid #004400 !important;
-        }
-
-        .CodeMirror-linenumber {
-            color: #004400 !important;
+        .cm-s-elegant.CodeMirror {
+            background: #fdf6e3 !important;
+            color: #000 !important;
         }
     </style>
 </head>
@@ -235,21 +267,29 @@
 
         <!-- Camera Controls (D-Pad Grid) -->
         <div id="camera-controls">
-            <button id="btn-zoom-in" title="Zoom In">+</button>
+            <!-- Row 1 -->
+            <button id="btn-rotate-ccw" title="Rotate Left">↺</button>
             <button id="btn-pan-n" title="Pan North">⬆️</button>
-            <button id="btn-zoom-out" title="Zoom Out">-</button>
+            <button id="btn-rotate-cw" title="Rotate Right">↻</button>
 
+            <!-- Row 2 -->
             <button id="btn-pan-w" title="Pan West">⬅️</button>
             <button id="btn-focus" title="Focar Roberto">RBT</button>
             <button id="btn-pan-e" title="Pan East">➡️</button>
 
+            <!-- Row 3 -->
+            <button id="btn-zoom-in" title="Zoom In">+</button>
             <button id="btn-pan-s" title="Pan South">⬇️</button>
+            <button id="btn-zoom-out" title="Zoom Out">-</button>
         </div>
 
         <!-- Terminal Interface -->
         <div id="interface-container">
             <div id="terminal-header" title="Clique para expandir/minimizar">
-                <span>Interface de Comando</span>
+                <div style="display:flex; align-items:center;">
+                    <span>Interface de Comando</span>
+                    <button id="btn-theme-toggle" class="icon-btn" title="Mudar Tema">🌙</button>
+                </div>
                 <span style="font-size: 1.2em;">[ ⛶ ]</span>
             </div>
             <div id="editor"></div>
