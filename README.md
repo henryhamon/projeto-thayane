@@ -69,16 +69,12 @@ Abaixo estão os métodos disponíveis no objeto global `roberto`:
 
 | Método | Retorno | Descrição |
 | --- | --- | --- |
-| `roberto.mover()` | `None` | Move o robô **1 bloco para frente** na direção atual. <br>
+| `roberto.mover()` | `None` | Move o robô **1 bloco para frente** na direção atual. <br> ⚠️ **Atenção:** Se houver um obstáculo, o robô sofrerá uma colisão (CRASH) e a simulação encerrará. |
 | `roberto.virar_direita()` | `None` | Gira o robô 90º no sentido **horário**. |
 | `roberto.virar_esquerda()` | `None` | Gira o robô 90º no sentido **anti-horário**. |
-| `roberto.sensor()` | `String` | Escaneia o bloco imediatamente à frente. Retorna:<br>
 | `roberto.escreva(msg)` | `None` | Envia uma mensagem de texto para a telemetria (Console). Útil para depurar o "pensamento" do robô. |
+| `roberto.sensor()` | `String` | Escaneia o bloco imediatamente à frente. Retorna:<br>• `'LIVRE'`: Caminho livre (terra).<br>• `'PAREDE'`: Obstáculo (Pedra/Árvore/Abismo).<br>• `'SAIDA'`: A Fazenda Antonina (Objetivo). |
 
-<br>⚠️ **Atenção:** Se houver um obstáculo, o robô sofrerá uma colisão (CRASH) e a simulação encerrará. |
-<br>• `'LIVRE'`: Caminho livre (terra).<br>
-<br>• `'PAREDE'`: Obstáculo (Pedra/Árvore/Abismo).<br>
-<br>• `'SAIDA'`: A Fazenda Antonina (Objetivo). |
 
 #### Exemplo de Código (Básico):
 
