@@ -61,7 +61,7 @@ Como Engenheiro(a) de Software Sênior da divisão de resgate, você deve reescr
 
 ---
 
-## 5. ⚙️ Manual de Hardware (API v3.0)
+## 5. ⚙️ Manual de Hardware
 
 O R.O.B.E.R.T.O. opera com um interpretador **Python 3.11** embarcado. Você não controla o robô diretamente com as setas do teclado; você deve programar a inteligência dele.
 
@@ -70,18 +70,15 @@ Abaixo estão os métodos disponíveis no objeto global `roberto`:
 | Método | Retorno | Descrição |
 | --- | --- | --- |
 | `roberto.mover()` | `None` | Move o robô **1 bloco para frente** na direção atual. <br>
-
-<br>⚠️ **Atenção:** Se houver um obstáculo, o robô sofrerá uma colisão (CRASH) e a simulação encerrará. |
 | `roberto.virar_direita()` | `None` | Gira o robô 90º no sentido **horário**. |
 | `roberto.virar_esquerda()` | `None` | Gira o robô 90º no sentido **anti-horário**. |
 | `roberto.sensor()` | `String` | Escaneia o bloco imediatamente à frente. Retorna:<br>
-
-<br>• `'LIVRE'`: Caminho livre (terra).<br>
-
-<br>• `'PAREDE'`: Obstáculo (Pedra/Árvore/Abismo).<br>
-
-<br>• `'SAIDA'`: A Fazenda Antonina (Objetivo). |
 | `roberto.escreva(msg)` | `None` | Envia uma mensagem de texto para a telemetria (Console). Útil para depurar o "pensamento" do robô. |
+
+<br>⚠️ **Atenção:** Se houver um obstáculo, o robô sofrerá uma colisão (CRASH) e a simulação encerrará. |
+<br>• `'LIVRE'`: Caminho livre (terra).<br>
+<br>• `'PAREDE'`: Obstáculo (Pedra/Árvore/Abismo).<br>
+<br>• `'SAIDA'`: A Fazenda Antonina (Objetivo). |
 
 #### Exemplo de Código (Básico):
 
