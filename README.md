@@ -54,7 +54,7 @@ Este é um projeto estático (client-side), o que facilita a execução.
 
 ---
 
-## 4. 🏔 Sua Missão:**
+## 4. 🏔 Sua Missão
 Como Engenheiro(a) de Software Sênior da divisão de resgate, você deve reescrever o firmware do R.O.B.E.R.T.O. O objetivo é garantir que ele saia do Cume (Ponto Azul) e encontre a **Fazenda Antonina** (Ponto Vermelho), independentemente da complexidade do labirinto gerado.
 
 **Lembre-se: Nenhum Roberto fica para trás.**
