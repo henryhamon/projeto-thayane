@@ -5,7 +5,7 @@ export function setupScene() {
 
   // Mountain vibe fog (greenish-grey)
   const fogColor = 0x2f4f4f; // Dark Slate Gray
-  scene.fog = new THREE.FogExp2(fogColor, 0.05);
+  scene.fog = new THREE.Fog(fogColor, 20, 80);
   scene.background = new THREE.Color(fogColor);
 
   // Isometric Camera Setup

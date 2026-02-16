@@ -1,116 +1,195 @@
+import { pyLoader } from './system/PyLoader.js';
+import { codeRunner } from './system/CodeRunner.js';
+import { assetManager } from './system/AssetManager.js';
 import * as THREE from 'three';
 import CodeMirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
-import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/python/python';
 import { setupScene } from './pico-parana/SceneSetup.js';
-import { TRILHA_DO_PICO, TILE_TYPES } from './pico-parana/MapData.js';
+// IMPORT ATUALIZADO: Trocamos TRILHA_DO_PICO por MazeGenerator
+import { MazeGenerator, TILE_TYPES } from './pico-parana/MapData.js';
+import { MazeRenderer } from './pico-parana/MazeRenderer.js';
+import { Rover } from './roberto/Rover.js';
+import { CameraControls } from './ui/CameraControls.js';
 
-// Initialization
+// --- Initialization ---
 const { scene, camera, renderer } = setupScene();
 document.getElementById('game-container').appendChild(renderer.domElement);
 
-// Map Generation
-const groupMap = new THREE.Group();
-scene.add(groupMap);
+// Add Atmospheric Fog
+const fogColor = 0x2f4f4f;
+scene.fog = new THREE.Fog(fogColor, 20, 100); // Neblina reduzida
+scene.background = new THREE.Color(fogColor);
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const materials = {
-  [TILE_TYPES.TERRA]: new THREE.MeshLambertMaterial({ color: 0x8B4513 }), // Brown
-  [TILE_TYPES.PEDRA]: new THREE.MeshLambertMaterial({ color: 0x555555 }), // Grey
-  [TILE_TYPES.CUME]: new THREE.MeshLambertMaterial({ color: 0xFFD700 }), // Gold
-  [TILE_TYPES.FAZENDA]: new THREE.MeshLambertMaterial({ color: 0x228B22 }) // Forest Green
-};
-
-// Render Map
-const mapWidth = TRILHA_DO_PICO[0].length;
-const mapHeight = TRILHA_DO_PICO.length;
-
-TRILHA_DO_PICO.forEach((row, z) => {
-  row.forEach((type, x) => {
-    const material = materials[type] || materials[TILE_TYPES.PEDRA];
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(x, 0, z);
-    cube.castShadow = true;
-    cube.receiveShadow = true;
-
-    // Visual variation for Obstacles
-    if (type === TILE_TYPES.PEDRA) {
-      cube.scale.y = 1 + Math.random() * 0.5; // Random height
-      cube.position.y = (cube.scale.y - 1) / 2;
-    } else {
-      // Slight offset for ground to prevent z-fighting if we had layers, but here it's fine
-      cube.position.y = -0.1;
-    }
-
-    groupMap.add(cube);
-  });
-});
-
-// Center the map in world space
-groupMap.position.set(-mapWidth / 2, 0, -mapHeight / 2);
-
-// Player (Roberto) Placeholder
-const playerGeo = new THREE.CapsuleGeometry(0.3, 0.8, 4, 8);
-const playerMat = new THREE.MeshPhongMaterial({ color: 0x00ff41, emissive: 0x002200, shininess: 100 });
-const player = new THREE.Mesh(playerGeo, playerMat);
-scene.add(player);
-
-// Find Start Position (CUME)
+// Global Variables
+let rover;
+let mazeRenderer;
 let startX = 0, startZ = 0;
-TRILHA_DO_PICO.forEach((row, z) => {
-  row.forEach((type, x) => {
-    if (type === TILE_TYPES.CUME) {
-      // Adjust coordinates relative to the groupMap centering
-      startX = x - mapWidth / 2;
-      startZ = z - mapHeight / 2;
-    }
-  });
-});
-// Place player at start
-player.position.set(startX, 1, startZ);
-
-
-// CodeMirror Setup
-const editor = CodeMirror(document.getElementById('editor'), {
-  value: "// -- PROT: ROBERTO // SYSTEM V1.0 --\n// Objetivo: Guiar Roberto do CUME ate a FAZENDA.\n\nfunction main() {\n  // Escreva seu algoritmo de busca aqui\n  \n}",
-  mode: "javascript",
-  // We rely on CSS overrides in index.html for the 'Terminal' look, 
-  // but initializing with default or 'monokai' if we installed it would work too.
-  // CSS overrides are safest here.
-  lineNumbers: true,
-  indentUnit: 2
-});
-
-// --- Animation Loop ---
+// VARIÁVEL GLOBAL DO MAPA (para usar no reset se quiser manter o mesmo mapa)
+let currentMapData = [];
 const clock = new THREE.Clock();
 
+// --- Main Startup Sequence ---
+(async () => {
+  const statusEl = document.getElementById('status-readout');
+
+  try {
+    statusEl.innerText = "STATUS: CARREGANDO ASSETS...";
+    await assetManager.loadAll();
+
+    // 2. Generate Maze (Dynamic)
+    statusEl.innerText = "STATUS: GERANDO TERRENO...";
+    mazeRenderer = new MazeRenderer();
+
+    // GERAÇÃO PROCEDURAL AQUI: (21x21 garante estrutura correta)
+    currentMapData = MazeGenerator.generate(21, 21);
+
+    const { offsetX, offsetZ } = await mazeRenderer.render(scene, currentMapData);
+
+    // 3. Setup Rover
+    rover = new Rover();
+    rover.addToScene(scene);
+
+    // Find Start Position
+    currentMapData.forEach((row, z) => {
+      row.forEach((type, x) => {
+        if (type === TILE_TYPES.CUME) {
+          startX = x + offsetX;
+          startZ = z + offsetZ;
+        }
+      });
+    });
+
+    rover.setPosition(startX, startZ);
+    rover.setRotation('N');
+    rover.currentMapData = currentMapData; // Pass Map Context for Collision
+
+    // 4. Initialize Camera Controls
+    initCameraControls(camera, rover);
+
+    statusEl.innerText = "STATUS: INICIALIZANDO PYTHON RUNTIME...";
+    await pyLoader.init();
+
+    statusEl.innerText = "STATUS: SISTEMA ONLINE (PYTHON 3.11)";
+    animate();
+
+  } catch (e) {
+    statusEl.innerText = "STATUS: ERRO CRÍTICO";
+    console.error(e);
+  }
+})();
+
+// --- Helper: Camera Controls Init ---
+function initCameraControls(camera, target) {
+  try {
+    const controls = new CameraControls(camera, target);
+  } catch (e) {
+    console.error("Failed to init camera controls", e);
+  }
+}
+
+const editor = CodeMirror(document.getElementById('editor'), {
+  value: `# -- PROT: ROBERTO // SYSTEM V2.0 (PYTHON) --
+# Objetivo: Guiar Roberto do CUME ate a FAZENDA.
+
+def main():
+  # Comandos disponiveis:
+  # roberto.mover()
+  # roberto.virar_esquerda()
+  # roberto.virar_direita()
+  # if roberto.sensor() == 'LIVRE': ...
+  
+  for i in range(4):
+      roberto.mover()
+      roberto.escreva(f"Passo {i}")
+
+# Executa a funcao principal
+main()
+`,
+  mode: "python",
+  theme: "default",
+  lineNumbers: true,
+  indentUnit: 4,
+  extraKeys: {
+    "Tab": function (cm) {
+      if (cm.somethingSelected()) {
+        cm.indentSelection("add");
+      } else {
+        cm.replaceSelection("    ", "end"); // Soft tabs
+      }
+    }
+  }
+});
+
+// Fullscreen Toggle
+const terminalHeader = document.getElementById('terminal-header');
+const container = document.getElementById('interface-container');
+
+if (terminalHeader && container) {
+  terminalHeader.addEventListener('click', () => {
+    container.classList.toggle('terminal-fullscreen');
+    // Refresh CodeMirror if needed (using global editor variable)
+    if (typeof editor !== 'undefined') {
+      setTimeout(() => editor.refresh(), 50);
+    }
+  });
+}
+
+// --- Animation Loop ---
 function animate() {
   requestAnimationFrame(animate);
-  const time = clock.getElapsedTime();
+  if (!rover) return;
 
-  // Idle animation for Roberto (hovering slightly)
-  player.position.y = 1 + Math.sin(time * 2) * 0.1;
-  player.rotation.y += 0.02;
+  const dt = clock.getDelta();
+  rover.update(dt);
+
+  if (rover.mesh) {
+    rover.mesh.position.y = Math.sin(clock.getElapsedTime() * 2) * 0.05;
+  }
 
   renderer.render(scene, camera);
 }
 
-animate();
-
 // --- UI Logic ---
-document.getElementById('btn-run').addEventListener('click', () => {
+document.getElementById('btn-run').addEventListener('click', async () => {
+  if (!rover) return;
   const code = editor.getValue();
-  console.log("Executing Protocol:", code);
-  document.getElementById('status-readout').innerText = "STATUS: EXECUTANDO ANALISE...";
+  const statusEl = document.getElementById('status-readout');
+  statusEl.innerText = "STATUS: PROCESSANDO...";
 
-  // TODO: Implement code execution sandbox
-  setTimeout(() => {
-    document.getElementById('status-readout').innerText = "STATUS: SISTEMA ONLINE";
-  }, 1000);
+  try {
+    const logs = await codeRunner.runUserCode(code);
+    rover.processLogs(logs);
+    statusEl.innerText = "STATUS: EXECUTANDO MOVIMENTOS...";
+
+    // Hook Events
+    rover.onWin = () => {
+      statusEl.innerText = "STATUS: RESGATE CONCLUIDO!";
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      alert('PARABENS! Roberto chegou a Fazenda!');
+    };
+
+    rover.onCrash = () => {
+      statusEl.innerText = "STATUS: COLISAO DETECTADA (PARE!)";
+    };
+
+  } catch (e) {
+    console.error(e);
+    alert(e.message);
+    statusEl.innerText = "STATUS: ERRO DE COMPILACAO";
+  }
 });
 
 document.getElementById('btn-reset').addEventListener('click', () => {
-  player.position.set(startX, 1, startZ);
-  player.rotation.set(0, 0, 0);
-  document.getElementById('status-readout').innerText = "STATUS: REINICIADO";
+  if (rover) {
+    rover.setPosition(startX, startZ);
+    rover.setRotation('N');
+    rover.actionQueue = [];
+    rover.isMoving = false;
+    document.getElementById('status-readout').innerText = "STATUS: REINICIADO";
+  }
 });

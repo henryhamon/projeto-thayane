@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projeto Thayane: Protocolo Roberto</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
             background-color: #0d1117;
-            color: #00ff41; /* CRT Green */
+            color: #00ff41;
+            /* CRT Green */
         }
-        
+
         #game-container {
             position: absolute;
             top: 0;
@@ -35,54 +38,154 @@
             justify-content: space-between;
         }
 
-        #terminal-panel {
+        /* HEADER */
+        #header-panel {
+            padding: 20px;
             pointer-events: auto;
-            background: rgba(0, 20, 0, 0.9);
+        }
+
+        /* CAMERA CONTROLS (D-PAD STYLE) */
+        #camera-controls {
+            position: absolute;
+            bottom: 40%;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            pointer-events: auto;
+
+            display: grid;
+            grid-template-columns: repeat(3, 40px);
+            grid-template-rows: repeat(3, 40px);
+            gap: 5px;
+            align-items: center;
+            justify-items: center;
+        }
+
+        #camera-controls button {
+            background: #000;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            width: 100%;
+            height: 100%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        #camera-controls button:hover {
+            background: #00ff41;
+            color: #000;
+        }
+
+        /* D-Pad Placement */
+        #btn-zoom-in {
+            grid-column: 1;
+            grid-row: 1;
+            font-size: 20px;
+        }
+
+        #btn-pan-n {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        #btn-zoom-out {
+            grid-column: 3;
+            grid-row: 1;
+            font-size: 20px;
+        }
+
+        #btn-pan-w {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        #btn-focus {
+            grid-column: 2;
+            grid-row: 2;
+            font-size: 10px !important;
+            font-weight: bold;
+        }
+
+        #btn-pan-e {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        #btn-pan-s {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+
+        /* TERMINAL / INTERFACE CONTAINER */
+        #interface-container {
+            pointer-events: auto;
+            background: rgba(0, 20, 0, 0.95);
             border-top: 2px solid #00ff41;
             padding: 10px;
             height: 30vh;
             display: flex;
             flex-direction: column;
+            transition: height 0.3s ease;
         }
 
-        .terminal-header {
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 5px;
+        .terminal-fullscreen {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 2000;
+            padding: 20px !important;
+            box-sizing: border-box;
+        }
+
+        .terminal-fullscreen .CodeMirror {
+            height: 100% !important;
+        }
+
+        #terminal-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid #004400;
             padding-bottom: 5px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            user-select: none;
         }
-        
+
+        #terminal-header:hover {
+            color: #fff;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
         #editor {
             flex-grow: 1;
             font-size: 14px;
             border: 1px solid #004400;
+            overflow: hidden;
         }
 
-        /* CodeMirror overrides for Green Terminal Theme */
-        .CodeMirror {
-            height: 100% !important;
-            background: transparent !important;
-            color: #00ff41 !important;
-        }
-        .CodeMirror-cursor {
-            border-left: 2px solid #00ff41 !important;
-        }
-        .CodeMirror-gutters {
-            background: transparent !important;
-            border-right: 1px solid #004400 !important;
-        }
-        .CodeMirror-linenumber {
-            color: #004400 !important;
-        }
-        
-        #controls {
+        #controls-bar {
             display: flex;
             gap: 10px;
             margin-top: 10px;
         }
-        
-        button {
+
+        #controls-bar button {
             background: #003300;
             color: #00ff41;
             border: 1px solid #00ff41;
@@ -93,30 +196,71 @@
             font-weight: bold;
             transition: all 0.2s;
         }
-        
-        button:hover {
+
+        #controls-bar button:hover {
             background: #00ff41;
             color: #000;
         }
+
+        /* CodeMirror Theme Overrides */
+        .CodeMirror {
+            height: 100% !important;
+            background: transparent !important;
+            color: #00ff41 !important;
+        }
+
+        .CodeMirror-cursor {
+            border-left: 2px solid #00ff41 !important;
+        }
+
+        .CodeMirror-gutters {
+            background: transparent !important;
+            border-right: 1px solid #004400 !important;
+        }
+
+        .CodeMirror-linenumber {
+            color: #004400 !important;
+        }
     </style>
 </head>
+
 <body>
     <div id="game-container"></div>
+
     <div id="ui-layer">
-        <div style="padding: 20px;">
+        <div id="header-panel">
             <h1>PROT: ROBERTO // PICO PARANA</h1>
             <div id="status-readout">STATUS: AGUARDANDO COMANDO...</div>
         </div>
-        
-        <div id="terminal-panel">
-            <div class="terminal-header">Interface de Comando</div>
+
+        <!-- Camera Controls (D-Pad Grid) -->
+        <div id="camera-controls">
+            <button id="btn-zoom-in" title="Zoom In">+</button>
+            <button id="btn-pan-n" title="Pan North">⬆️</button>
+            <button id="btn-zoom-out" title="Zoom Out">-</button>
+
+            <button id="btn-pan-w" title="Pan West">⬅️</button>
+            <button id="btn-focus" title="Focar Roberto">RBT</button>
+            <button id="btn-pan-e" title="Pan East">➡️</button>
+
+            <button id="btn-pan-s" title="Pan South">⬇️</button>
+        </div>
+
+        <!-- Terminal Interface -->
+        <div id="interface-container">
+            <div id="terminal-header" title="Clique para expandir/minimizar">
+                <span>Interface de Comando</span>
+                <span style="font-size: 1.2em;">[ ⛶ ]</span>
+            </div>
             <div id="editor"></div>
-            <div id="controls">
+            <div id="controls-bar">
                 <button id="btn-run">Executar Protocolo</button>
                 <button id="btn-reset">Reiniciar</button>
             </div>
         </div>
     </div>
+
     <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>
