@@ -214,8 +214,22 @@
 
         #controls-bar {
             display: flex;
+            justify-content: space-between; /* Separa os grupos */
+            padding: 10px;
+            background: #001100;
+            border-top: 1px solid #00ff00;
+        }
+        .secondary-controls {
+            display: flex;
             gap: 10px;
-            margin-top: 10px;
+        }
+        .cmd-btn.action {
+            background: #003300;
+            border: 1px solid #00aa00;
+            color: #aaffaa;
+        }
+        .cmd-btn.action:hover {
+            background: #005500;
         }
 
         #controls-bar button {
@@ -261,7 +275,7 @@
 
     <div id="ui-layer">
         <div id="header-panel">
-            <h1>PROT: ROBERTO // PICO PARANA</h1>
+            <h1>PRJ: ROBERTO // PICO PARANA</h1>
             <div id="status-readout">STATUS: AGUARDANDO COMANDO...</div>
         </div>
 

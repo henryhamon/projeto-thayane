@@ -84,8 +84,42 @@ function initCameraControls(camera, target) {
   }
 }
 
+async function generateLevel() {
+  const statusEl = document.getElementById('status-readout');
+  statusEl.innerText = "STATUS: GERANDO NOVO TERRENO...";
+
+  // 1. Gera Matriz 15x15
+  currentMapData = MazeGenerator.generate(15, 15);
+
+  // 2. Renderiza 3D (O renderer limpa os objetos antigos automaticamente)
+  const { offsetX, offsetZ } = await mazeRenderer.render(scene, currentMapData);
+
+  // 3. Encontra Ponto de Partida
+  currentMapData.forEach((row, z) => {
+    row.forEach((type, x) => {
+      if (type === TILE_TYPES.CUME) {
+        startX = x + offsetX;
+        startZ = z + offsetZ;
+      }
+    });
+  });
+
+  // 4. Atualiza o Roberto
+  rover.setPosition(startX, startZ);
+  rover.setRotation('N');
+  rover.currentMapData = currentMapData; // Atualiza o "cérebro" físico do colisor
+  rover.mazeRenderer = mazeRenderer;     // Atualiza a referência para pintar o chão
+  rover.actionQueue = [];
+  rover.isMoving = false;
+  
+  // Atualiza controles da câmera para focar no novo local
+  if(controls) controls.focusTarget();
+  
+  statusEl.innerText = "STATUS: TERRENO PRONTO.";
+}
+
 const editor = CodeMirror(document.getElementById('editor'), {
-  value: `# -- PROT: ROBERTO // SYSTEM V2.0 (PYTHON) --
+  value: `# -- PRJ: ROBERTO 
 # Objetivo: Guiar Roberto do CUME ate a FAZENDA.
 
 def main():
@@ -188,4 +222,26 @@ document.getElementById('btn-reset').addEventListener('click', () => {
     rover.isMoving = false;
     document.getElementById('status-readout').innerText = "STATUS: REINICIADO";
   }
+});
+
+document.getElementById('btn-new-map').addEventListener('click', async () => {
+    // if(!confirm("Gerar novo mapa?")) return;
+    await generateLevel();
+    rover.actionQueue = []; 
+});
+
+document.getElementById('btn-download').addEventListener('click', () => {
+    const code = editor.getValue();
+    const blob = new Blob([code], { type: 'text/x-python;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    // Nome do arquivo com data/hora para evitar duplicatas
+    const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,"-");
+    link.download = `roberto_solucao_${timestamp}.py`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 });
