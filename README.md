@@ -5,6 +5,8 @@
 
 > *"Onde o algoritmo guloso falha, a busca em largura prevalece."*
 
+![cover](./assets/thayane_cover.png)
+
 ## 1. 📜 Contexto
 
 Estamos em 2026. Após o incidente no Pico Paraná, onde a operadora (codinome: *T.H.A.Y.A.N.E.*) utilizou um algoritmo guloso (*Greedy Search*) focado apenas na velocidade devido ao Life Style. 
@@ -26,7 +28,6 @@ Este é um simulador de labirintos desenvolvido para a prática de Estruturas de
 ### 🛠️ Stack Tecnológica
 * **Visualização:** [Three.js](https://threejs.org/) + Vite (Renderização 3D isométrica).
 * **Engine:** Execução de Python no browser via [Pyodide](https://pyodide.org/) (WebAssembly).
-* **Transpilação:** Suporte nativo a Portugol através da biblioteca **[meuPiá](https://github.com/meuPia)**.
 
 ---
 
