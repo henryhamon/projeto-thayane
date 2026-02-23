@@ -51,7 +51,7 @@ Este é um projeto estático (client-side), o que facilita a execução.
     npm run dev
     ```
 
-4.  Abra seu navegador em `http://localhost:5173` e comece o resgate.
+4.  Abra seu navegador em `http://localhost:5173` ou [acesse este link](https://henryhamon.github.io/projeto-thayane) e comece o resgate .
 
 ---
 
