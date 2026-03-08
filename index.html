@@ -268,8 +268,7 @@
             color: #000 !important;
         }
     </style>
-  <script type="module" crossorigin src="/projeto-thayane/assets/index-D0RXqBb0.js"></script>
-  <link rel="stylesheet" crossorigin href="/projeto-thayane/assets/index-DNlqL4Im.css">
+  <script type="module" crossorigin src="/projeto-thayane/assets/index-CGpADp9Q.js"></script>
 </head>
 
 <body>
@@ -310,16 +309,23 @@
             </div>
             <div id="editor"></div>
             <div id="controls-bar">
-                <div class="primary-controls">
+                <div class="primary-controls" style="display: flex; align-items: center; gap: 15px;">
                     <button id="btn-run" class="cmd-btn run">Executar Protocolo</button>
                     <button id="btn-reset" class="cmd-btn">Reiniciar Posição</button>
+                    
+                    <div id="language-selector" style="display: flex; gap: 10px; color: #00ff41; font-weight: bold;">
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="editor-lang" value="python" checked> Python
+                        </label>
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="editor-lang" value="meupia"> meuPiá
+                        </label>
+                    </div>
                 </div>
-
+            
                 <div class="secondary-controls">
-                    <button id="btn-new-map" class="cmd-btn action" title="Gerar um novo labirinto aleatório">🔄 Novo
-                        Mapa</button>
-                    <button id="btn-download" class="cmd-btn action" title="Baixar código Python">💾 Download
-                        .PY</button>
+                    <button id="btn-new-map" class="cmd-btn action" title="Gerar um novo labirinto">🔄 Novo Mapa</button>
+                    <button id="btn-download" class="cmd-btn action" title="Baixar código">💾 Download .PY</button>
                 </div>
             </div>
         </div>
