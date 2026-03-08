@@ -37,7 +37,7 @@ Este é um projeto estático (client-side), o que facilita a execução.
 
 1.  **Clone o repositório:**
     ```bash
-    git clone [https://github.com/seu-usuario/projeto-thayane.git](https://github.com/seu-usuario/projeto-thayane.git)
+    git clone https://github.com/henryhamon/projeto-thayane.git
     cd projeto-thayane
     ```
 
@@ -74,7 +74,7 @@ Abaixo estão os métodos disponíveis no objeto global `roberto`:
 | `roberto.mover()` | `None` | Move o robô **1 bloco para frente** na direção atual. <br> ⚠️ **Atenção:** Se houver um obstáculo, o robô sofrerá uma colisão (CRASH) e a simulação encerrará. |
 | `roberto.virar_direita()` | `None` | Gira o robô 90º no sentido **horário**. |
 | `roberto.virar_esquerda()` | `None` | Gira o robô 90º no sentido **anti-horário**. |
-| `roberto.escreva(msg)` | `None` | Envia uma mensagem de texto para a telemetria (Console). Útil para depurar o "pensamento" do robô. |
+| `roberto.dizer(msg)` | `None` | Envia uma mensagem de texto para a telemetria (Console). Útil para depurar o "pensamento" do robô. |
 | `roberto.sensor()` | `String` | Escaneia o bloco imediatamente à frente. Retorna:<br>• `'LIVRE'`: Caminho livre (terra).<br>• `'PAREDE'`: Obstáculo (Pedra/Árvore/Abismo).<br>• `'SAIDA'`: A Fazenda Antonina (Objetivo). |
 
 
@@ -84,7 +84,7 @@ Abaixo estão os métodos disponíveis no objeto global `roberto`:
 def main():
     # Estratégia simples (que provavelmente falhará em labirintos complexos)
     if roberto.sensor() == 'LIVRE':
-        roberto.escreva("Caminho limpo, avançando...")
+        roberto.dizer("Caminho limpo, avançando...")
         roberto.mover()
     elif roberto.sensor() == 'SAIDA':
         roberto.mover() # Vitória!
@@ -97,7 +97,41 @@ main()
 
 ---
 
-## 6. 🎛️ Painel de Controle da Missão
+6. 🇧🇷 Suporte a Portugol (meuPiá)
+Para os engenheiros juniores que estão aprendendo lógica de programação, o R.O.B.E.R.T.O. possui suporte nativo ao meuPiá, uma linguagem em Portugol estruturado. O código é transpilado no próprio navegador para Python usando WebAssembly.
+Para utilizar, basta alterar a chave seletora abaixo do editor de código para meuPiá. O syntax highlighting e a extensão de download serão ajustados automaticamente.
+⚠️ Atenção à Gramática: Como escreva é uma palavra reservada da linguagem meuPiá para o terminal padrão, para enviar logs internos do hardware do robô, você deve utilizar estritamente o método roberto.dizer("Sua mensagem").
+Exemplo de Código em meuPiá:
+
+
+```Delphi
+algoritmo "FugaDoLabirinto"var
+    status : string
+
+inicio
+    roberto.dizer("Iniciando varredura...")
+    
+    // Loop infinito usando 1 como verdadeiro
+    enquanto 1 == 1 faca
+        status = roberto.sensor()
+        
+        se status == "SAIDA" entao
+            roberto.dizer("Fazenda encontrada!")
+            interrompa
+        fim_se
+
+        se status == "LIVRE" entao
+            roberto.mover()
+        senao
+            roberto.virar_direita()
+        fim_se
+    fim_enquanto
+fim_algoritmo
+```
+
+---
+
+## 7. 🎛️ Painel de Controle da Missão
 
 Ao lado do mapa 3D, você encontrará os controles operacionais:
 
@@ -111,30 +145,29 @@ Ao lado do mapa 3D, você encontrará os controles operacionais:
 
 ---
 
-## 7. 📟 Telemetria e Depuração (Console)
+## 8. 📟 Telemetria e Depuração (Console)
 
 Como saber o que seu código está "pensando" ou por que o robô tomou uma decisão errada?
-
-1. No seu código, use `roberto.escreva("Verificando esquerda...")`.
-2. No navegador, abra as **Ferramentas de Desenvolvedor** (Pressione `F12` ou `Ctrl+Shift+I`).
-3. Vá para a aba **Console**.
-4. Todas as mensagens do robô aparecerão lá. Se houver um erro de sintaxe no seu Python, ele também será exibido no Console (além da mensagem de status na tela).
+1. No seu código, use `roberto.dizer("Verificando esquerda...")`.
+2. No navegador, abra as Ferramentas de Desenvolvedor (Pressione F12 ou Ctrl+Shift+I).
+3. Vá para a aba Console.
+4. Todas as mensagens do robô aparecerão lá. Se houver um erro de sintaxe no seu código ou no compilador do meuPiá, a mensagem de erro detalhada também será exibida no Console (além do alerta vermelho na tela).
 
 ---
 
-## 8. ✅ Critérios de Aprovação
+## 9. ✅ Critérios de Aprovação
 
 Para completar a missão, sua solução deve:
 
 1. **Autonomia:** O robô deve chegar ao bloco Vermelho sem intervenção humana.
 2. **Segurança:** O robô não pode colidir com paredes (Game Over).
 3. **Robustez:** O código deve funcionar em mapas aleatórios (clique em "Novo Mapa" para provar).
-4. **Entrega:** O arquivo `.py` baixado deve ser enviado na plataforma.
+4. **Entrega:** O arquivo com o seu código (.py ou .por) baixado deve ser enviado na plataforma da disciplina.
 
 **Boa sorte, Operador. O Roberto conta com você.**
 
 ---
 
-## 9. 🎖 Créditos
+## 10. 🎖 Créditos
 
-`Projeto Thayane` is developed with 💜 by  [Henry Hamon](https://github.com/henryhamon)
+`Projeto Thayane` e o compilador [meuPiá](https://github.com/meuPia) são desenvolvidos com 💜 por [Henry Hamon](https://github.com/henryhamon)
