@@ -4,10 +4,11 @@ export class CodeRunner {
     constructor() { }
 
     async runUserCode(userCode, mapData, language = 'python') {
-    const pyodide = pyLoader.getPyodide();
-    pyodide.globals.set("GAME_MAP_RAW", mapData);
+        const pyodide = pyLoader.getPyodide();
 
-    const ROBERTO_PY_SOURCE = `
+        pyodide.globals.set("GAME_MAP_RAW", mapData);
+
+        const ROBERTO_PY_SOURCE = `
 class RobertoHardware:
     def __init__(self, map_data):
         self.map = map_data
@@ -49,11 +50,7 @@ class RobertoHardware:
 
     def dizer(self, msg):
         self.logs.append({'action': 'PRINT', 'message': str(msg)})
-        def dizer(self, msg):
-        self.logs.append({'action': 'PRINT', 'message': str(msg)})
 
-    # Alias para retrocompatibilidade com scripts Python legados
-    # e com a documentação original do R.O.B.E.R.T.O.
     def escreva(self, msg):
         self.dizer(msg)
 
@@ -65,85 +62,113 @@ class RobertoHardware:
         return 0, 0
 
 roberto = RobertoHardware(GAME_MAP_RAW)
+
+# Funções auxiliares globais para mapear as chamadas do Portugol
+def mover():
+    roberto.mover()
+    
+def virar_esquerda():
+    roberto.virar_esquerda()
+
+def virar_direita():
+    roberto.virar_direita()
+    
+def sensor():
+    return roberto.sensor()
+
+# Mapeamos para 'dizer' para não conflitar com a palavra reservada 'escreva' do meuPiá
+def dizer(msg):
+    roberto.dizer(msg)
 `;
 
-    let finalPythonLogic = userCode;
-    if (language === 'meupia') {
-        await pyLoader.installMeuPia();
-        pyodide.globals.set("codigo_portugol", userCode);
-        
-        await pyodide.runPythonAsync(`
-            import os
-            import sys
-            from meuPia.compiler import main 
-            
-            # --- MÁGICA DE ENGENHARIA (MONKEY PATCH ROBUSTO) ---
-            # Varre os módulos em memória para encontrar a classe SemanticAnalyzer
-            # sem precisar saber o caminho exato do import.
-            for mod_name, mod in sys.modules.items():
-                if hasattr(mod, 'SemanticAnalyzer') and not hasattr(mod, '_patched_roberto'):
-                    sa_class = getattr(mod, 'SemanticAnalyzer')
-                    _old_init = sa_class.__init__
-                    
-                    def _new_init(self, lexemes):
-                        _old_init(self, lexemes)
-                        # Declara o roberto fantasma para passar no SemanticAnalyzer
-                        self.declared_vars.append({"lexeme": "roberto", "token": "ID", "code_index": "0:0"})
-                        
-                    sa_class.__init__ = _new_init
-                    setattr(mod, '_patched_roberto', True)
-                    break
-            # ----------------------------------------------------
+        let finalPythonLogic = userCode;
 
-            os.makedirs("output", exist_ok=True)
-            if os.path.exists("output/main.py"):
-                os.remove("output/main.py")
-            
-            with open("main.por", "w", encoding="utf-8") as f:
-                f.write(codigo_portugol)
-            
-            try:
-                main("main.por", "output")
-            except Exception as e:
-                pass
-        `);
+        if (language === 'meupia') {
+            await pyLoader.installMeuPia();
 
-        finalPythonLogic = pyodide.runPython(`
-            import os
-            if not os.path.exists("output/main.py"):
-                raise SyntaxError("Erro de Compilação no meuPiá! Verifique se declarou as variáveis e fechou os blocos.")
+            let preprocessedCode = userCode.replace(/roberto\.mover\(\)/g, 'mover()');
+            preprocessedCode = preprocessedCode.replace(/roberto\.virar_esquerda\(\)/g, 'virar_esquerda()');
+            preprocessedCode = preprocessedCode.replace(/roberto\.virar_direita\(\)/g, 'virar_direita()');
+            preprocessedCode = preprocessedCode.replace(/roberto\.sensor\(\)/g, 'sensor()');
+            preprocessedCode = preprocessedCode.replace(/roberto\.escreva/g, 'dizer');
+
+            pyodide.globals.set("codigo_portugol", preprocessedCode);
+
+            await pyodide.runPythonAsync(`
+                import os
+                import sys
+                from meuPia.compiler import main 
                 
-            with open("output/main.py", "r", encoding="utf-8") as f:
-                _codigo_gerado = f.read()
-            
-            # A variável sozinha na última linha obriga o Pyodide a retorná-la para o JS
-            _codigo_gerado
-        `); 
-    }
-    const fullScript = `
-${ROBERTO_PY_SOURCE}
+                # --- MÁGICA DE ENGENHARIA (MONKEY PATCH ROBUSTO) ---
+                for mod_name, mod in sys.modules.items():
+                    if hasattr(mod, 'SemanticAnalyzer') and not hasattr(mod, '_patched_roberto'):
+                        sa_class = getattr(mod, 'SemanticAnalyzer')
+                        _old_init = sa_class.__init__
+                        
+                        def _new_init(self, lexemes):
+                            _old_init(self, lexemes)
+                            # Registra as funções globais no analisador semântico
+                            self.declared_functions.append({"lexeme": "mover", "token": "ID"})
+                            self.declared_functions.append({"lexeme": "virar_esquerda", "token": "ID"})
+                            self.declared_functions.append({"lexeme": "virar_direita", "token": "ID"})
+                            self.declared_functions.append({"lexeme": "sensor", "token": "ID"})
+                            self.declared_functions.append({"lexeme": "dizer", "token": "ID"})
+                            
+                        sa_class.__init__ = _new_init
+                        setattr(mod, '_patched_roberto', True)
+                        break
+                # ----------------------------------------------------
 
-# --- CODIGO DO ALUNO ---
-${finalPythonLogic}
-`;
+                os.makedirs("output", exist_ok=True)
+                if os.path.exists("output/main.py"):
+                    os.remove("output/main.py")
+                
+                with open("main.por", "w", encoding="utf-8") as f:
+                    f.write(codigo_portugol)
+                
+                try:
+                    main("main.por", "output")
+                except Exception as e:
+                    pass
+            `);
 
-    try {
-        pyodide.runPython(fullScript);
-    } catch (e) {
-        console.error("Runtime Error:", e);
-        throw new Error(`Erro: ${e.message}`);
-    }
+            finalPythonLogic = pyodide.runPython(`
+                import os
+                if not os.path.exists("output/main.py"):
+                    raise SyntaxError("Erro de Compilação no meuPiá! Verifique a sintaxe do Portugol.")
+                    
+                with open("output/main.py", "r", encoding="utf-8") as f:
+                    _codigo_gerado = f.read()
+                
+                _codigo_gerado
+            `);
+        }
 
-    const robertoProxy = pyodide.globals.get('roberto');
-    if (!robertoProxy) throw new Error("Erro Crítico: Roberto sumiu da memória.");
+        try {
+            pyodide.runPython(ROBERTO_PY_SOURCE);
+        } catch (apiError) {
+            console.error("Erro interno na API do Roberto:", apiError);
+            throw new Error("Falha ao carregar hardware virtual do Roberto.");
+        }
 
-    const logsProxy = robertoProxy.logs;
-    const logs = logsProxy.toJs({ dict_converter: Object.fromEntries });
+        try {
+            pyodide.runPython(finalPythonLogic);
+        } catch (e) {
+            console.error("Runtime Error:", e);
+            const cleanMessage = e.message.replace(/File "<exec>".*/g, "").trim();
+            throw new Error(`Erro no seu código:\\n\${cleanMessage}`);
+        }
 
-    logsProxy.destroy();
-    robertoProxy.destroy();
+        const robertoProxy = pyodide.globals.get('roberto');
+        if (!robertoProxy) throw new Error("Erro Crítico: Roberto sumiu da memória.");
 
-    return logs;
+        const logsProxy = robertoProxy.logs;
+        const logs = logsProxy.toJs({ dict_converter: Object.fromEntries });
+
+        logsProxy.destroy();
+        robertoProxy.destroy();
+
+        return logs;
     }
 }
 
