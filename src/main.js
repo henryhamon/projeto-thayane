@@ -13,6 +13,7 @@ import { EditorState, Compartment } from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { meuPiaLanguage } from './meupia-lang.js'; 
+import { version } from '../package.json';
 
 // --- Initialization ---
 const { scene, camera, renderer } = setupScene();
@@ -29,6 +30,7 @@ const clock = new THREE.Clock();
 let controls;
 
 // --- Main Startup Sequence ---
+console.log(`%c🚀 Projeto Thayane - Sistema Online v${version}`, 'color: #00ff00; font-weight: bold; font-size: 14px; background: #222; padding: 4px; border-radius: 4px;');
 (async () => {
   const statusEl = document.getElementById('status-readout');
 
