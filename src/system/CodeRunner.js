@@ -156,7 +156,7 @@ def dizer(msg):
         } catch (e) {
             console.error("Runtime Error:", e);
             const cleanMessage = e.message.replace(/File "<exec>".*/g, "").trim();
-            throw new Error(`Erro no seu código:\\n\${cleanMessage}`);
+            throw new Error(`Erro no seu código:\n${cleanMessage}`);
         }
 
         const robertoProxy = pyodide.globals.get('roberto');
