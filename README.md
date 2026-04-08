@@ -58,6 +58,8 @@ Este é um projeto estático (client-side), o que facilita a execução.
 ## 4. 🏔 Sua Missão
 Como Engenheiro(a) de Software Sênior da divisão de resgate, você deve reescrever o firmware do R.O.B.E.R.T.O. O objetivo é garantir que ele saia do Cume (Ponto Azul) e encontre a **Fazenda Antonina** (Ponto Vermelho), independentemente da complexidade do labirinto gerado.
 
+🛑 NOTA IMPORTANTE SOBRE O CICLO DE EXECUÇÃO: Você não precisa se preocupar em criar um loop de repetição infinito no seu código para manter o robô andando. O sistema do simulador gerencia o tempo automaticamente: cada ciclo de simulação executa o método que você desenvolver no main. Sua função deve apenas decidir o que fazer no "momento atual".
+
 
 [![Demo](https://img.youtube.com/vi/zuXUuHrz5EE/maxresdefault.jpg)](https://youtu.be/zuXUuHrz5EE) 
 
